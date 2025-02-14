@@ -9,7 +9,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      {{- include "compss-app.labels" . | nindent 4 }}
   endpoints:
   - port: prometheus
     interval: 30s
