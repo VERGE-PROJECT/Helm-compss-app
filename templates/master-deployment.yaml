@@ -57,10 +57,13 @@ spec:
           - "0"   # min_vms
           - "0"   # max_vms
           - "0"   # creation_time
-          - "-t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }} 
-    {{- range $key, $value := .Values.app.params }}
-    {{- printf " -%s %s" $key $value }}
-    {{- end }}"
+          {{- $params := "" }}
+          {{- range $key, $value := .Values.app.params }}
+            {{- if and (ne $key "") }}  
+              {{- $params = printf "%s --%s %s" $params $key $value }}  
+            {{- end }}
+          {{- end }}
+          - "-t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
         ports:
         - name: {{ .Values.compss.master.ports.name }}
           containerPort: 22
@@ -80,7 +83,7 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command: ["redis-server"]
         ports:
-        - containerPort: "{{ .Values.compss.master.prometheusClient.redisContainerPort }}" 
+        - containerPort: {{ .Values.compss.master.prometheusClient.redisContainerPort }}
           name: redis
       - name: prometheus-client
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -91,6 +94,6 @@ spec:
           - "--buckets"
           - "{{ .Values.compss.master.prometheusClient.buckets }}"
         ports:
-        - containerPort: "{{ .Values.compss.master.prometheusClient.containerPort }}" 
+        - containerPort: {{ .Values.compss.master.prometheusClient.containerPort }}
           name: prometheus
       {{- end}}

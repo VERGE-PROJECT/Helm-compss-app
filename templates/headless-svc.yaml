@@ -15,7 +15,7 @@ spec:
   {{- if eq .Values.compss.master.prometheusClient.enabled true }}
   - name: prometheus
     protocol: TCP
-    port: "{{ .Values.compss.master.prometheusClient.containerPort }}" 
+    port: {{ .Values.compss.master.prometheusClient.containerPort }}
     targetPort: prometheus
   {{- end }}
   selector:
