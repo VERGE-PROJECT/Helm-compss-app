@@ -49,6 +49,7 @@ app:
     file: matmul-prom.py
   # ALL PARAMS NEED TO BE STRINGS
   params:
-    num_blocks': "4"
+    num_blocks: "4"
     elems_per_block: "1024"
+    number_iterations: "10"
 
