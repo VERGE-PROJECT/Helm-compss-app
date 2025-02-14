@@ -40,6 +40,26 @@ spec:
               done;
             done
       containers:
+      {{- if eq .Values.compss.master.prometheusClient.enabled true }}
+      - name: redis-server
+        image: "redis:latest"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["redis-server"]
+        ports:
+        - containerPort: {{ .Values.compss.master.prometheusClient.redisContainerPort }}
+          name: redis
+      - name: prometheus-client
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: 
+          - "python3"
+          - "{{ .Values.app.context.folderPath }}/metrics_client.py"
+          - "--buckets"
+          - "{{ .Values.compss.master.prometheusClient.buckets }}"
+        ports:
+        - containerPort: {{ .Values.compss.master.prometheusClient.containerPort }}
+          name: prometheus
+      {{- end}}
       - name: master
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -63,7 +83,7 @@ spec:
               {{- $params = printf "%s --%s %s" $params $key $value }}  
             {{- end }}
           {{- end }}
-          - "-t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
+          - "-d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
         ports:
         - name: {{ .Values.compss.master.ports.name }}
           containerPort: 22
@@ -77,23 +97,3 @@ spec:
         persistentVolumeClaim:
           claimName: master-results-pvc
       {{- end }}
-      {{- if eq .Values.compss.master.prometheusClient.enabled true }}
-      - name: redis-server
-        image: "redis:latest"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ["redis-server"]
-        ports:
-        - containerPort: {{ .Values.compss.master.prometheusClient.redisContainerPort }}
-          name: redis
-      - name: prometheus-client
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: 
-          - "python3"
-          - "{{ .Values.app.context.folderPath }}/metrics_client.py"
-          - "--buckets"
-          - "{{ .Values.compss.master.prometheusClient.buckets }}"
-        ports:
-        - containerPort: {{ .Values.compss.master.prometheusClient.containerPort }}
-          name: prometheus
-      {{- end}}
