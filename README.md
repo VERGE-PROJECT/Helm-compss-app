@@ -2,12 +2,12 @@
 
 URL to download the Chart locally
 ```
-git clone https://gitlab.bsc.es/ppc-bsc/software/compss-app-helm.git
+git clone git@github.com:VERGE-PROJECT/Helm-compss-app.git
 ```
 
 Installation
 ```
-cd compss-app
+cd helm-compss-app
 helm install compss-app .
 ```
 
@@ -16,6 +16,8 @@ Make sure the values file adapts to your Kubernetes cluster. By default:
 - Image pull policy is set to `Always`
 - The master is deployed **without** a volume
 - 2 workers with 4 CPU and 4 RAM
+
+You need to specify the `image.repository`, with COMPSs and the application, and also the `app` values. 
 
 ## Namespace
 If you want to deploy the application in a custom namespace, you have to specify it when executing the `helm install`, such that:
