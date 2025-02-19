@@ -53,7 +53,7 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command: 
           - "python3"
-          - "{{ .Values.app.context.folderPath }}/metrics_client.py"
+          - "{{ .Values.app.context.folderPath }}/metrics_client_value.py"
           - "--buckets"
           - "{{ .Values.compss.master.prometheusClient.buckets }}"
         ports:

@@ -4,7 +4,7 @@ metadata:
   name: {{ .Release.Name }}-monitor
   namespace: {{ .Release.Namespace }}
   labels:
-    release: monitoring-prometheus-lw79p
+    release: prometheus
     {{- include "compss-app.labels" . | nindent 4 }}
 spec:
   selector:
@@ -12,7 +12,7 @@ spec:
       {{- include "compss-app.labels" . | nindent 4 }}
   endpoints:
   - port: prometheus
-    interval: 20s
+    interval: 15s
     scrapeTimeout: 10s
     path: /metrics
     scheme: http
