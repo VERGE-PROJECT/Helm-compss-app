@@ -4,7 +4,7 @@ metadata:
   name: {{ .Release.Name }}-monitor
   namespace: {{ .Release.Namespace }}
   labels:
-    release: prometheus
+    release: {{ .Values.monitoring.servicemonitor.releaseName }}
     {{- include "compss-app.labels" . | nindent 4 }}
 spec:
   selector:

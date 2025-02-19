@@ -53,3 +53,7 @@ app:
     target: "200"
     lifecycles: "35"
     get-fitness: "True"
+
+monitoring:
+  servicemonitor:
+    releaseName: prometheus
