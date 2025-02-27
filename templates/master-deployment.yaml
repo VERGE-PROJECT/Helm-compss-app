@@ -5,7 +5,6 @@ metadata:
   name: {{ .Release.Name }}-master
   labels:
     {{- include "compss-app.labels" . | nindent 4 }}
-    {{- toYaml .Values.compss.master.labels | nindent 4 }}
 spec:
   replicas: 1
   selector:
@@ -71,6 +70,7 @@ spec:
           - "0"   # min_vms
           - "0"   # max_vms
           - "0"   # creation_time
+          - "43100" # master port
           {{- $params := "" }}
           {{- range $key, $value := .Values.app.params }}
             {{- if and (ne $key "") }}  
@@ -79,9 +79,8 @@ spec:
           {{- end }}
           - "-d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
         ports:
-        - name: port-43100
-          containerPort: 43100
-          protocol: TCP
+        - name: 43100-port
+          containerPort: 43100 
       {{- if and .Values.compss.master.volume }}
         volumeMounts:
           - name: master-results-pvc
