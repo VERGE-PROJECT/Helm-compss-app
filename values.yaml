@@ -27,8 +27,6 @@ compss:
 
   worker:
     number: 2
-    labels:
-      node: worker
     resources:
       cpu: 4
       memory: 4  # in gigabytes
