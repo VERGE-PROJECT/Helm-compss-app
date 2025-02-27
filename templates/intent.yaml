@@ -1,0 +1,25 @@
+apiVersion: "ido.intel.com/v1alpha1"
+kind: Intent
+metadata:
+  name: my-intent
+spec: 
+  targetRef:
+    kind: "Deployment"
+    name: "{{ .Release.Namespace }}/{{ .Release.Name }}-worker"
+  objectives:
+    - name: compss-latency
+      value: 40
+      tolerance: 0.1
+      measuredBy: {{ .Release.Namespace }}/compss-latency
+
+---
+apiVersion: "ido.intel.com/v1alpha1"
+kind: KPIProfile
+metadata:
+  name: compss-latency
+spec:
+  type: "latency"
+  description: "Measures P99 latency in ms over a 30ms time window as reported by Linkerd service mesh."
+  query: "histogram_quantile(0.99, sum(rate(task_execution_time_seconds_bucket[5m])) by (le))"
+  props:
+    endpoint: "http://172.18.229.89:9090/api/v1/query"
