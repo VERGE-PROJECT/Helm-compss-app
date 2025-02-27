@@ -28,7 +28,7 @@ spec:
           - |
             for i in $(seq 1 {{ $.Values.compss.worker.number }}); do
               worker_index=$((i - 1))
-              until nslookup {{ .Release.Name }}-worker-${worker_index}.{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local; do
+              until nslookup {{ .Release.Name }}-worker-${worker_index}.{{ .Release.Namespace }}.svc.cluster.local; do
                 echo "Waiting for {{ .Release.Name }}-worker-${worker_index}";
                 sleep 2;
               done;
