@@ -1,4 +1,5 @@
-{{- range $i, $e := until .Values.compss.worker.number }}
+{{- $workerCount := .Values.compss.worker.number | default 1 }}  
+{{- range $i := until $workerCount }} 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
