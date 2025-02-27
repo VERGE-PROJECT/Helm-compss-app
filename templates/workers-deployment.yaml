@@ -30,7 +30,7 @@ spec:
             cpu: {{ $.Values.compss.worker.resources.cpu }}
         ports:
         - containerPort: 22
-          name: {{ $.Values.compss.worker.ports.name }}
+          name: 22-port
         - containerPort: 43001
           name: 43001-port
         - containerPort: 43002

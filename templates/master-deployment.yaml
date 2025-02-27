@@ -79,8 +79,8 @@ spec:
           {{- end }}
           - "-d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
         ports:
-        - name: {{ .Values.compss.master.ports.name }}
-          containerPort: 22
+        - name: port-43100
+          containerPort: 43100
           protocol: TCP
       {{- if and .Values.compss.master.volume }}
         volumeMounts:
