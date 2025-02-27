@@ -1,5 +1,4 @@
-{{- $workerCount := .Values.compss.worker.number | int }}  
-{{- range $i := until $workerCount }}  
+{{- range $i := .Values.compss.worker.number -}}  
 apiVersion: v1
 kind: Service
 metadata:
