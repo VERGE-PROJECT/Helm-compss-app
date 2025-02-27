@@ -1,33 +1,28 @@
+{{- range $i, $e := until .Values.compss.worker.number }}
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   namespace: {{ .Release.Namespace }}
-  name: {{ .Release.Name }}-worker
+  name: {{ .Release.Name }}-worker-{{ $i }}
   labels:
     {{- include "compss-app.labels" . | nindent 4 }}
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: {{ .Release.Name }}
-      pod-hostname: worker
-  serviceName: {{ .Release.Name }}
-  replicas: {{ $.Values.compss.worker.number }}
+      role: worker-{{ $i }}
   template:
     metadata:
       labels:
         app: {{ .Release.Name }}
-        pod-hostname: worker
+        role: worker-{{ $i }}
     spec:
-      terminationGracePeriodSeconds: 5
-      subdomain: {{ .Release.Name }}
-      dnsConfig:
-        searches:
-        - {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local
       containers:
       - name: worker
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: [ "/usr/sbin/sshd", "-D" ]
+        command: [ "/usr/sbin/sshd",  "-D" ]
         resources:
           limits:
             memory: {{ $.Values.compss.worker.resources.memory }}G
@@ -35,6 +30,12 @@ spec:
         ports:
         - containerPort: 22
           name: {{ $.Values.compss.worker.ports.name }}
+        - containerPort: 43001
+          name: 43001-port
+        - containerPort: 43002
+          name: 43002-port
+        - containerPort: 49049
+          name: 49049-port
       {{- if eq .Values.compss.worker.prometheusClient.enabled true }}
       - name: redis-server
         image: "redis:latest"
@@ -55,3 +56,4 @@ spec:
         - containerPort: {{ .Values.compss.worker.prometheusClient.containerPort }} 
           name: prometheus
       {{- end}}
+{{- end }}

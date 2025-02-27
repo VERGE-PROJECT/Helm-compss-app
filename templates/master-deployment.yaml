@@ -11,20 +11,14 @@ spec:
   selector:
     matchLabels:
       app: {{ .Release.Name }}
-      pod-hostname: master
+      role: master
   template:
     metadata:
       labels:
         app: {{ .Release.Name }}
-        pod-hostname: master
+        role: master
     spec:
       serviceAccountName: master-sa
-      terminationGracePeriodSeconds: 5
-      hostname: master
-      subdomain: {{ .Release.Name }}
-      dnsConfig:
-        searches:
-        - {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local
       initContainers:
       - name: wait-for-workers
         image: busybox
