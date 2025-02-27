@@ -18,7 +18,7 @@ spec:
         app: {{ .Release.Name }}
         role: master
     spec:
-      serviceAccountName: master-sa
+      serviceAccountName: {{ .Release.Name }}-sa
       initContainers:
       - name: wait-for-workers
         image: busybox
