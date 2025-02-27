@@ -53,9 +53,13 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command: 
           - "python3"
-          - "{{ .Values.app.context.folderPath }}/metrics_client_value.py"
-          - "--buckets"
-          - "{{ .Values.compss.master.prometheusClient.buckets }}"
+          - "{{ .Values.app.context.folderPath }}/metrics_client_counter.py"
+          - "--redis_port"
+          - "{{ .Values.compss.master.prometheusClient.redisContainerPort }}"
+          - "--prometheus_port"
+          - "{{ .Values.compss.master.prometheusClient.containerPort }}"
+          #- "--buckets"
+          #- "{{ .Values.compss.master.prometheusClient.buckets }}"
         ports:
         - containerPort: {{ .Values.compss.master.prometheusClient.containerPort }}
           name: prometheus
@@ -83,7 +87,7 @@ spec:
               {{- $params = printf "%s --%s %s" $params $key $value }}  
             {{- end }}
           {{- end }}
-          - "-d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
+          - "--scheduler=es.bsc.compss.scheduler.custom.rtheuristics.RTHeuristicsScheduler --scheduler_config_file=/home/omartinez/compss-matmul/matmul-extract/sched.config -d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
         ports:
         - name: {{ .Values.compss.master.ports.name }}
           containerPort: 22
