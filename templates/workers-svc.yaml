@@ -1,23 +1,21 @@
-{{- $namespace := .Release.Namespace }}  
-{{- $releaseName := .Release.Name }} 
 {{- $workerCount := .Values.compss.worker.number | int }}  
 {{- range $i := until $workerCount }}  
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ $namespace }}
-  name: {{ $releaseName }}-worker-{{ $i }}
+  namespace: {{ $.Release.Namespace }}
+  name: {{ $.Release.Name }}-worker-{{ $i }}
   labels:
-    {{- include "compss-app.labels" . | nindent 4 }}
+    {{- include "compss-app.labels" $ | nindent 4 }}
 spec:
   selector:
-    app: {{ $releaseName }}
+    app: {{ .Release.Name }}
     role: worker-{{ $i }}
   ports:
   - name: port-22
     protocol: TCP
     port: 22
-    targetPort: {{ .Values.compss.master.ports.name }}
+    targetPort: {{ $.Values.compss.master.ports.name }}
   - name: port-43001  
     protocol: TCP
     port: 43001
