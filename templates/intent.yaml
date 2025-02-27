@@ -5,7 +5,7 @@ metadata:
 spec: 
   targetRef:
     kind: "Deployment"
-    name: "{{ .Release.Namespace }}/{{ .Release.Name }}-worker"
+    name: "{{ .Release.Namespace }}/{{ .Release.Name }}-worker-0"
   objectives:
     - name: compss-latency
       value: 40
