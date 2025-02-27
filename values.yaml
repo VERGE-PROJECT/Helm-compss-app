@@ -3,10 +3,10 @@
 # Declare variables to be passed into your templates.
 
 image:
-  repository: oriolmac/compss-nbc
+  repository: oriolmac/compss-app
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: latest
+  tag: 3.3-deployment
 
 compss:
   master:
