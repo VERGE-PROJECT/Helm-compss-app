@@ -1,3 +1,4 @@
+{{- if .Values.intents.enabled }}
 apiVersion: "ido.intel.com/v1alpha1"
 kind: Intent
 metadata:
@@ -23,3 +24,4 @@ spec:
   query: "histogram_quantile(0.99, sum(rate(task_execution_time_seconds_bucket[5m])) by (le))"
   props:
     endpoint: "http://172.18.229.89:9090/api/v1/query"
+{{- end }}

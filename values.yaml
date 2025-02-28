@@ -40,3 +40,6 @@ app:
 monitoring:
   servicemonitor:
     releaseName: prometheus
+
+intents:
+  enabled: false
