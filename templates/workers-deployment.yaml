@@ -7,16 +7,21 @@ metadata:
   name: {{ $.Release.Name }}-worker-{{ $i }}
   labels:
     {{- include "compss-app.labels" $ | nindent 4 }}
+    app: compss
+    wf_id: {{ $.Release.Name }}
+    role: worker-{{ $i }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ $.Release.Name }}
+      app: compss
+      wf_id: {{ $.Release.Name }}
       role: worker-{{ $i }}
   template:
     metadata:
       labels:
-        app: {{ $.Release.Name }}
+        app: compss 
+        wf_id: {{ $.Release.Name }}
         role: worker-{{ $i }}
     spec:
       containers:

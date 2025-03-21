@@ -5,7 +5,8 @@ metadata:
   name: {{ .Release.Name }}-master
 spec:
   selector:
-    app: {{ .Release.Name }}
+    app: compss 
+    wf_id: {{ $.Release.Name }}
     role: master
   ports:
   - name: port-43100

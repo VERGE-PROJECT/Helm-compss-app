@@ -9,7 +9,8 @@ metadata:
     {{- include "compss-app.labels" $ | nindent 4 }}
 spec:
   selector:
-    app: {{ $.Release.Name }}
+    app: compss 
+    wf_id: {{ $.Release.Name }}
     role: worker-{{ $i }}
   ports:
   - name: port-22

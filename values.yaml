@@ -3,57 +3,59 @@
 # Declare variables to be passed into your templates.
 
 image:
-  repository: oriolmac/compss-app
+  repository: albabsc/compss-k8s-gen
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: 3.3-deployment
 
 compss:
+  # namespace: {}
   master:
+    labels:
+      node: master
+    ports:
+      name: ssh
     # local volume in node where the master is executed
     volume: 
-      localPath: /tmp/compss-results   # it has to exist locally
-      node: agx13
+      localPath: /home/acanete/compss-gen-results  # it has to exist locally
+      node: agx12
     prometheusClient: 
       enabled: true
       buckets: "-inf, 0.0001, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.1, 1, 10, 50, 100, 200, inf" # Histogram bucket
       containerPort: 15000
       redisContainerPort: 6379
+
   worker:
-    number: 2
+    number: 1
+    labels:
+      node: worker
     resources:
       cpu: 4
       memory: 4  # in gigabytes
-    prometheusClient: {}
+    ports:
+      name: ssh
+    prometheusClient: 
+      enabled: false
+      buckets: "-inf, 0.0001, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.1, 1, 10, 50, 100, 200, inf" # Histogram bucket
+      containerPort: 15000
+      redisContainerPort: 6379
+
+  service:
+    ssh: 22
 
 app:
   context:
-    folderPath: /home/omartinez/compss-matmul/matmul-extract
+    folderPath: /home/acanete/gen
     file: gen.py
   params:
-    num_individuals: "380"
-    size: "100"
-    target: "200"
-    lifecycles: "35"
-    get-fitness: "True"
+    num_individuals: "500"
+    size: "500"
+    target: "1000"
+    lifecycles: "10"
+    get-fitness: "False"
+    iterations: "1"
+    sleep_tasks: "4"
 
 monitoring:
   servicemonitor:
     releaseName: prometheus
-
-intents:
-  enabled: true
-  intent:
-    name: my-intent
-    objectives:
-      name: compss-latency
-      value: 40
-      tolerance: 0.1
-      measuredBy: compss-latency
-  KPIProfile:
-    name: compss-latency
-    type: latency
-    description: Measures P99 latency in ms over a 30ms time window as reported by Linkerd service mesh.
-    query: histogram_quantile(0.99, sum(rate(task_execution_time_seconds_bucket[5m])) by (le))
-    props: 
-      endpoint: http://172.18.229.89:9090/api/v1/query

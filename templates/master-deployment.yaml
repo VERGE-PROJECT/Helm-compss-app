@@ -5,16 +5,21 @@ metadata:
   name: {{ .Release.Name }}-master
   labels:
     {{- include "compss-app.labels" . | nindent 4 }}
+    app: compss 
+    wf_id: {{ $.Release.Name }}
+    role: master
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      app: compss 
+      wf_id: {{ $.Release.Name }}
       role: master
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
+        app: compss 
+        wf_id: {{ $.Release.Name }}
         role: master
     spec:
       serviceAccountName: {{ .Release.Name }}-sa
@@ -46,9 +51,13 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command: 
           - "python3"
-          - "{{ .Values.app.context.folderPath }}/metrics_client_value.py"
-          - "--buckets"
-          - "{{ .Values.compss.master.prometheusClient.buckets }}"
+          - "{{ .Values.app.context.folderPath }}/metrics_client_counter_final.py"
+          - "--redis_port"
+          - "{{ .Values.compss.master.prometheusClient.redisContainerPort }}"
+          - "--prometheus_port"
+          - "{{ .Values.compss.master.prometheusClient.containerPort }}"
+          #- "--buckets"
+          #- "{{ .Values.compss.master.prometheusClient.buckets }}"
         ports:
         - containerPort: {{ .Values.compss.master.prometheusClient.containerPort }}
           name: prometheus
@@ -59,6 +68,8 @@ spec:
         env: 
         - name: DEPLOYMENT_NAME
           value: {{ .Release.Name }}
+        - name: DEPLOYMENT_NAMESPACE
+          value: {{ .Release.Namespace }}
         command: [ "/opt/COMPSs/Runtime/scripts/system/kubernetes/master.sh" ]
         args: 
           - "{{ .Release.Namespace }}"
@@ -67,14 +78,14 @@ spec:
           - "{{ .Values.compss.worker.resources.memory }}"
           - "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           - "{{ .Values.app.context.folderPath }}"  # app_dir
-          - "0"   # min_vms
-          - "0"   # max_vms
+          - "1"   # min_vms
+          - "2"   # max_vms
           - "0"   # creation_time
           - "43100" # master port
           {{- $params := "" }}
           {{- range $key, $value := .Values.app.params }}
             {{- if and (ne $key "") }}  
-              {{- $params = printf "%s --%s %s" $params $key $value }}  
+              {{- $params = printf "%s -%s %s" $params $key $value }}  
             {{- end }}
           {{- end }}
           - "-d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
