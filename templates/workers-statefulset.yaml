@@ -1,5 +1,61 @@
+{{- if .Values.compss.worker.nodes }}
+# If order defined launch as Deployment
+  {{- range $index, $node := .Values.compss.worker.nodes }}
+---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment 
+metadata:
+  namespace: {{ $.Release.Namespace }}
+  name: {{ $.Release.Name }}-worker-{{ $index }}
+  labels:
+    app: {{ $.Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $.Release.Name }}
+      pod-hostname: worker-{{ $index }}
+  template:
+    metadata:
+      labels:
+        app: {{ $.Release.Name }}
+        pod-hostname: worker-{{ $index }}
+    spec:
+      hostname: {{ $.Release.Name }}-worker-{{ $index }}
+      terminationGracePeriodSeconds: 5
+      subdomain: {{ $.Release.Name }}
+      dnsConfig:
+        searches:
+        - {{ $.Release.Name }}.{{ $.Release.Namespace }}.svc.cluster.local
+
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - {{ $node }} 
+
+      containers:
+      - name: worker
+        image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        command: [ "/usr/sbin/sshd", "-D" ]
+        resources:
+          limits:
+            memory: {{ $.Values.compss.worker.resources.memory }}G
+            cpu: 4
+        ports:
+        - containerPort: 22
+          name: {{ $.Values.compss.worker.ports.name }}
+  {{- end }}
+{{- else }}
+# If order not defined launch as StatefulSet
+---
+apiVersion: apps/v1
+kind: StatefulSet 
 metadata:
   namespace: {{ .Release.Namespace }}
   name: {{ .Release.Name }}-worker
@@ -31,7 +87,7 @@ spec:
         resources:
           limits:
             memory: {{ $.Values.compss.worker.resources.memory }}G
-            cpu: {{ $.Values.compss.worker.resources.cpu }}
+            cpu: 4
         ports:
         - containerPort: 22
           name: {{ $.Values.compss.worker.ports.name }}
@@ -54,4 +110,5 @@ spec:
         ports:
         - containerPort: {{ .Values.compss.worker.prometheusClient.containerPort }} 
           name: prometheus
-      {{- end}}
+      {{- end }}
+{{- end }}

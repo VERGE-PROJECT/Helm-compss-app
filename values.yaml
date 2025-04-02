@@ -17,20 +17,31 @@ compss:
       name: ssh
     # local volume in node where the master is executed
     volume: {}
-      #localPath: /home/omartinez/verge-repo/Helm-compss-app/results   # it has to exist locally
-      #node: agx12
+    #  localPath: /home/omartinez/verge-repo/helm-results   # it has to exist locally
+    #  node: agx12
     prometheusClient: 
       enabled: true
       buckets: "-inf, 0.0001, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.1, 1, 10, 50, 100, 200, inf" # Histogram bucket
       containerPort: 15000
       redisContainerPort: 6379
+    #scheduler_config:
+    #  heuristics.useinputfile: "true"
+    #  heuristics.blockingaction: "true"
+    #  scheduler.warmuptasks: "9"
+    #  heuristics.inputfile: /home/omartinez/compss-matmul/matmul-extract/input_ilp.dat
+    #  heuristics.heuristics: "spt"
+    #  vertical.scalability: "false"
+    #  vertical.increasing.up: "3"
+    #  vertical.increasing.down: "3"
+    #  scheduler.magicnumber.up: "3000"
+    #  scheduler.magicnumber.down: "15000"
 
   worker:
     number: 2
     labels:
       node: worker
     resources:
-      cpu: 4
+      cpu: 3
       memory: 4  # in gigabytes
     ports:
       name: ssh
@@ -39,6 +50,10 @@ compss:
       buckets: "-inf, 0.0001, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.1, 1, 10, 50, 100, 200, inf" # Histogram bucket
       containerPort: 15000
       redisContainerPort: 6379
+    nodes:
+    #  "0": agx11 
+    #  "1": agx12 
+    #  "2": nx11 
 
   service:
     ssh: 22
@@ -48,11 +63,17 @@ app:
     folderPath: /home/omartinez/compss-matmul/matmul-extract
     file: gen.py
   params:
+    #num_blocks: "6"
+    #elems_per_block: "128"
+    #sleep_tasks: "4"
+
     num_individuals: "200"
-    size: "350"
-    target: "200"
-    lifecycles: "50"
-    get-fitness: "True"
+    size: "200"
+    target: "400"
+    lifecycles: "10"
+    get-fitness: "False"
+    iterations: "1"
+    sleep_tasks: "3"
 
 monitoring:
   servicemonitor:
