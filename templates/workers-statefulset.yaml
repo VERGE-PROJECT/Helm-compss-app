@@ -46,7 +46,7 @@ spec:
         resources:
           limits:
             memory: {{ $.Values.compss.worker.resources.memory }}G
-            cpu: 4
+            cpu: {{ $.Values.compss.worker.resources.cpu }}
         ports:
         - containerPort: 22
           name: {{ $.Values.compss.worker.ports.name }}
@@ -87,7 +87,7 @@ spec:
         resources:
           limits:
             memory: {{ $.Values.compss.worker.resources.memory }}G
-            cpu: 4
+            cpu: {{ $.Values.compss.worker.resources.cpu }}
         ports:
         - containerPort: 22
           name: {{ $.Values.compss.worker.ports.name }}
