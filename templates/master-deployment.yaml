@@ -47,9 +47,13 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command: 
           - "python3"
-          - "{{ .Values.app.context.folderPath }}/metrics_client_value.py"
-          - "--buckets"
-          - "{{ .Values.compss.master.prometheusClient.buckets }}"
+          - "{{ .Values.app.context.folderPath }}/metrics_client_counter_final.py"
+          - "--redis_port"
+          - "{{ .Values.compss.master.prometheusClient.redisContainerPort }}"
+          - "--prometheus_port"
+          - "{{ .Values.compss.master.prometheusClient.containerPort }}"
+          #- "--buckets"
+          #- "{{ .Values.compss.master.prometheusClient.buckets }}"
         ports:
         - containerPort: {{ .Values.compss.master.prometheusClient.containerPort }}
           name: prometheus
@@ -71,23 +75,30 @@ spec:
           - "0"   # min_vms
           - "0"   # max_vms
           - "0"   # creation_time
+          {{- $schedparams := "" }}
+          {{- range $key, $value := .Values.compss.master.scheduler_config }}
+            {{- if ne $key "" }}  
+              {{- $schedparams = printf "%s%s=%s;" $schedparams $key $value }}  
+            {{- end }}
+          {{- end }}
+          - "{{ $schedparams }}"
           {{- $params := "" }}
           {{- range $key, $value := .Values.app.params }}
             {{- if and (ne $key "") }}  
               {{- $params = printf "%s --%s %s" $params $key $value }}  
             {{- end }}
           {{- end }}
-          - "-d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
+          - "--scheduler_config_file=/home/omartinez/compss-matmul/matmul-extract/sched.config --scheduler=es.bsc.compss.scheduler.orderstrict.fifo.FifoTS -d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
         ports:
         - name: {{ .Values.compss.master.ports.name }}
           containerPort: 22
           protocol: TCP
       {{- if and .Values.compss.master.volume }}
         volumeMounts:
-          - name: master-results-pvc
+          - name: master-results-pvc-2
             mountPath: /root/.COMPSs/ # mount path within the container 
       volumes:
-      - name: master-results-pvc
+      - name: master-results-pvc-2
         persistentVolumeClaim:
-          claimName: master-results-pvc
+          claimName: master-results-pvc-2
       {{- end }}

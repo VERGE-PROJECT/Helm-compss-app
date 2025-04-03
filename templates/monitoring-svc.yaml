@@ -12,7 +12,7 @@ spec:
       {{- include "compss-app.labels" . | nindent 4 }}
   endpoints:
   - port: prometheus
-    interval: 15s
-    scrapeTimeout: 10s
+    interval: 5s
+    scrapeTimeout: 5s
     path: /metrics
     scheme: http
