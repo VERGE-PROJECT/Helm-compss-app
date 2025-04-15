@@ -16,9 +16,9 @@ compss:
     ports:
       name: ssh
     # local volume in node where the master is executed
-    volume: 
-      localPath: /home/omartinez/verge-repo/helm-results  # it has to exist locally
-      node: agx12
+    volume: {}
+    #  localPath: /home/omartinez/verge-repo/helm-results  # it has to exist locally
+    #  node: agx12
     prometheusClient: 
       enabled: true
       buckets: "-inf, 0.0001, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.1, 1, 10, 50, 100, 200, inf" # Histogram bucket
