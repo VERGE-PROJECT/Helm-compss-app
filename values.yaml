@@ -48,9 +48,9 @@ app:
     folderPath: /home/acanete/gen
     file: gen.py
   params:
-    num_individuals: "500"
-    size: "500"
-    target: "1000"
+    num_individuals: "200"
+    size: "200"
+    target: "400"
     lifecycles: "10"
     get-fitness: "False"
     iterations: "1"

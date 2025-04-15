@@ -78,14 +78,14 @@ spec:
           - "{{ .Values.compss.worker.resources.memory }}"
           - "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           - "{{ .Values.app.context.folderPath }}"  # app_dir
-          - "1"   # min_vms
-          - "2"   # max_vms
+          - "0"   # min_vms
+          - "0"   # max_vms
           - "0"   # creation_time
           - "43100" # master port
           {{- $params := "" }}
           {{- range $key, $value := .Values.app.params }}
             {{- if and (ne $key "") }}  
-              {{- $params = printf "%s -%s %s" $params $key $value }}  
+              {{- $params = printf "%s --%s %s" $params $key $value }}  
             {{- end }}
           {{- end }}
           - "-d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
