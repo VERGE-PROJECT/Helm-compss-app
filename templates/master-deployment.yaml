@@ -4,21 +4,27 @@ metadata:
   namespace: {{ .Release.Namespace }}
   name: {{ .Release.Name }}-master
   labels:
-    {{- include "compss-app.labels" . | nindent 4 }}
+    {{- include "compss-matmul.labels" . | nindent 4 }}
     {{- toYaml .Values.compss.master.labels | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: {{ .Release.Name }}
-      role: master
+      pod-hostname: master
   template:
     metadata:
       labels:
         app: {{ .Release.Name }}
-        role: master
+        pod-hostname: master
     spec:
-      serviceAccountName: master-sa
+      serviceAccountName: cleanup
+      terminationGracePeriodSeconds: 5
+      hostname: master
+      subdomain: {{ .Release.Name }}
+      dnsConfig:
+        searches:
+        - {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local
       initContainers:
       - name: wait-for-workers
         image: busybox
@@ -34,30 +40,13 @@ spec:
               done;
             done
       containers:
-      {{- if eq .Values.compss.master.prometheusClient.enabled true }}
-      - name: redis-server
-        image: "redis:latest"
+      - name: mqtt
+        image: "oriolmac/mqtt-broker"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ["redis-server"]
         ports:
-        - containerPort: {{ .Values.compss.master.prometheusClient.redisContainerPort }}
-          name: redis
-      - name: prometheus-client
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: 
-          - "python3"
-          - "{{ .Values.app.context.folderPath }}/metrics_client_counter_final.py"
-          - "--redis_port"
-          - "{{ .Values.compss.master.prometheusClient.redisContainerPort }}"
-          - "--prometheus_port"
-          - "{{ .Values.compss.master.prometheusClient.containerPort }}"
-          #- "--buckets"
-          #- "{{ .Values.compss.master.prometheusClient.buckets }}"
-        ports:
-        - containerPort: {{ .Values.compss.master.prometheusClient.containerPort }}
-          name: prometheus
-      {{- end}}
+        - name: mqtt
+          containerPort: 1883
+          protocol: TCP
       - name: master
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -71,34 +60,22 @@ spec:
           - "{{ .Values.compss.worker.resources.cpu }}"
           - "{{ .Values.compss.worker.resources.memory }}"
           - "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          - "{{ .Values.app.context.folderPath }}"  # app_dir
+          - "{{ .Values.matmulparams.context.folderPath }}"  # app_dir
           - "0"   # min_vms
           - "0"   # max_vms
           - "0"   # creation_time
-          {{- $schedparams := "" }}
-          {{- range $key, $value := .Values.compss.master.scheduler_config }}
-            {{- if ne $key "" }}  
-              {{- $schedparams = printf "%s%s=%s;" $schedparams $key $value }}  
-            {{- end }}
-          {{- end }}
-          - "{{ $schedparams }}"
-          {{- $params := "" }}
-          {{- range $key, $value := .Values.app.params }}
-            {{- if and (ne $key "") }}  
-              {{- $params = printf "%s --%s %s" $params $key $value }}  
-            {{- end }}
-          {{- end }}
-          - "--scheduler_config_file=/home/omartinez/compss-matmul/matmul-extract/sched.config --scheduler=es.bsc.compss.scheduler.orderstrict.fifo.FifoTS -d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
+          - "-d -t -g {{ .Values.matmulparams.context.folderPath }}/{{ .Values.matmulparams.context.file }} -b {{ .Values.matmulparams.b }} -e {{ .Values.matmulparams.e }}"
+
         ports:
         - name: {{ .Values.compss.master.ports.name }}
           containerPort: 22
           protocol: TCP
       {{- if and .Values.compss.master.volume }}
         volumeMounts:
-          - name: master-results-pvc-2
+          - name: master-results-pvc
             mountPath: /root/.COMPSs/ # mount path within the container 
       volumes:
-      - name: master-results-pvc-2
+      - name: master-results-pvc
         persistentVolumeClaim:
-          claimName: master-results-pvc-2
+          claimName: master-results-pvc
       {{- end }}

@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "compss-app.name" -}}
+{{- define "compss-matmul.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,10 +10,10 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "compss-app.fullname" -}}
+{{- define "compss-matmul.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
-{{- else }}
+{{- else }} 
 {{- $name := default .Chart.Name .Values.nameOverride }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "compss-app.chart" -}}
+{{- define "compss-matmul.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "compss-app.labels" -}}
-helm.sh/chart: {{ include "compss-app.chart" . }}
-{{ include "compss-app.selectorLabels" . }}
+{{- define "compss-matmul.labels" -}}
+helm.sh/chart: {{ include "compss-matmul.chart" . }}
+{{ include "compss-matmul.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,18 +45,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "compss-app.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "compss-app.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- define "compss-matmul.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "compss-matmul.name" . }}
 {{- end }}
 
-{{/*
-Create the name of the service account to use
-*/}}
-{{- define "compss-app.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "compss-app.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}
