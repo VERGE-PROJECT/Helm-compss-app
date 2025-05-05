@@ -5,20 +5,24 @@ metadata:
   name: {{ .Release.Name }}-master
   labels:
     {{- include "compss-app.labels" . | nindent 4 }}
-    {{- toYaml .Values.compss.master.labels | nindent 4 }}
+    app: compss 
+    wf_id: {{ $.Release.Name }}
+    role: master
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      app: compss 
+      wf_id: {{ $.Release.Name }}
       role: master
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
+        app: compss 
+        wf_id: {{ $.Release.Name }}
         role: master
     spec:
-      serviceAccountName: master-sa
+      serviceAccountName: {{ .Release.Name }}-sa
       initContainers:
       - name: wait-for-workers
         image: busybox
@@ -28,7 +32,7 @@ spec:
           - |
             for i in $(seq 1 {{ $.Values.compss.worker.number }}); do
               worker_index=$((i - 1))
-              until nslookup {{ .Release.Name }}-worker-${worker_index}.{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local; do
+              until nslookup {{ .Release.Name }}-worker-${worker_index}.{{ .Release.Namespace }}.svc.cluster.local; do
                 echo "Waiting for {{ .Release.Name }}-worker-${worker_index}";
                 sleep 2;
               done;
@@ -64,6 +68,8 @@ spec:
         env: 
         - name: DEPLOYMENT_NAME
           value: {{ .Release.Name }}
+        - name: DEPLOYMENT_NAMESPACE
+          value: {{ .Release.Namespace }}
         command: [ "/opt/COMPSs/Runtime/scripts/system/kubernetes/master.sh" ]
         args: 
           - "{{ .Release.Namespace }}"
@@ -75,10 +81,11 @@ spec:
           - "0"   # min_vms
           - "0"   # max_vms
           - "0"   # creation_time
+          - "43100" # master port
           {{- $schedparams := "" }}
           {{- range $key, $value := .Values.compss.master.scheduler_config }}
             {{- if ne $key "" }}  
-              {{- $schedparams = printf "%s%s=%s;" $schedparams $key $value }}  
+              {{- $schedparams = printf "%s%s=%v;" $schedparams $key $value }}
             {{- end }}
           {{- end }}
           - "{{ $schedparams }}"
@@ -88,17 +95,16 @@ spec:
               {{- $params = printf "%s --%s %s" $params $key $value }}  
             {{- end }}
           {{- end }}
-          - "--scheduler_config_file=/home/omartinez/compss-matmul/matmul-extract/sched.config --scheduler=es.bsc.compss.scheduler.orderstrict.fifo.FifoTS -d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
+          - "--scheduler_config_file={{ .Values.app.context.folderPath }}/sched.config --scheduler=es.bsc.compss.scheduler.lookahead.locality.LocalityTS -d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
         ports:
-        - name: {{ .Values.compss.master.ports.name }}
-          containerPort: 22
-          protocol: TCP
+        - name: 43100-port
+          containerPort: 43100 
       {{- if and .Values.compss.master.volume }}
         volumeMounts:
-          - name: master-results-pvc-2
+          - name: master-results-pvc
             mountPath: /root/.COMPSs/ # mount path within the container 
       volumes:
-      - name: master-results-pvc-2
+      - name: master-results-pvc
         persistentVolumeClaim:
-          claimName: master-results-pvc-2
+          claimName: master-results-pvc
       {{- end }}

@@ -5,10 +5,17 @@ metadata:
   name: {{ .Release.Name }}-master
 spec:
   selector:
-    app: {{ .Release.Name }}
+    app: compss 
+    wf_id: {{ $.Release.Name }}
     role: master
   ports:
   - name: port-43100
     protocol: TCP
     port: 43100
     targetPort: 43100-port
+  {{- if eq .Values.compss.master.prometheusClient.enabled true }}
+  - name: prometheus
+    protocol: TCP
+    port: {{ .Values.compss.master.prometheusClient.containerPort }}
+    targetPort: prometheus
+  {{- end }}

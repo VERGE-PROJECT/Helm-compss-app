@@ -3,58 +3,64 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Release.Namespace }}
-  name: {{ .Release.Name }}-worker-{{ $i }}
+  namespace: {{ $.Release.Namespace }}
+  name: {{ $.Release.Name }}-worker-{{ $i }}
   labels:
-    {{- include "compss-app.labels" . | nindent 4 }}
+    {{- include "compss-app.labels" $ | nindent 4 }}
+    app: compss
+    wf_id: {{ $.Release.Name }}
+    role: worker-{{ $i }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      app: compss
+      wf_id: {{ $.Release.Name }}
       role: worker-{{ $i }}
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
+        app: compss 
+        wf_id: {{ $.Release.Name }}
         role: worker-{{ $i }}
     spec:
       containers:
       - name: worker
-        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        image: {{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
         command: [ "/usr/sbin/sshd",  "-D" ]
         resources:
           limits:
             memory: {{ $.Values.compss.worker.resources.memory }}G
-            cpu: {{ $.Values.compss.worker.resources.cpu }}
+            cpu: {{ add $.Values.compss.worker.resources.cpu (default 0 $.Values.compss.master.scheduler_config.vertical_increasing_cpus) }}
         ports:
         - containerPort: 22
-          name: {{ $.Values.compss.worker.ports.name }}
+          name: 22-port
         - containerPort: 43001
           name: 43001-port
         - containerPort: 43002
           name: 43002-port
         - containerPort: 49049
           name: 49049-port
-      {{- if eq .Values.compss.worker.prometheusClient.enabled true }}
+      {{- if eq $.Values.compss.worker.prometheusClient.enabled true }}
       - name: redis-server
         image: "redis:latest"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
         command: ["redis-server"]
         ports:
-        - containerPort: {{ .Values.compss.worker.prometheusClient.redisContainerPort }}
+        - containerPort: {{ $.Values.compss.worker.prometheusClient.redisContainerPort }}
           name: redis
       - name: prometheus-client
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
         command: 
           - "python3"
-          - "{{ .Values.app.context.folderPath }}/metrics_client.py"
+          - "{{ $.Values.app.context.folderPath }}/metrics_client.py"
           - "--buckets"
-          - "{{ .Values.compss.worker.prometheusClient.buckets }}"
+          - "{{ $.Values.compss.worker.prometheusClient.buckets }}"
         ports:
-        - containerPort: {{ .Values.compss.worker.prometheusClient.containerPort }} 
+        - containerPort: {{ $.Values.compss.worker.prometheusClient.containerPort }} 
           name: prometheus
       {{- end}}
+---
 {{- end }}
