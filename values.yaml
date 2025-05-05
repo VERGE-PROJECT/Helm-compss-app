@@ -1,12 +1,12 @@
 # Default values for compss-app.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-
+#oriolmac/compss-test:latest
 image:
-  repository: oriolmac/compss-nbc
+  repository: oriolmac/compss
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: latest
+  tag: 3.3-deployment
 
 compss:
   # namespace: {}
@@ -17,20 +17,25 @@ compss:
       name: ssh
     # local volume in node where the master is executed
     volume: {}
-    #  localPath: /tmp/compss-results   # it has to exist locally
-    #  node: agx15
+    #  localPath: /home/omartinez/verge-repo/helm-results  # it has to exist locally
+    #  node: agx12
     prometheusClient: 
       enabled: true
       buckets: "-inf, 0.0001, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.1, 1, 10, 50, 100, 200, inf" # Histogram bucket
       containerPort: 15000
       redisContainerPort: 6379
 
+    scheduler_config:
+      vertical_scalability: "true"
+      vertical_scaling_up_taskThreshold: "115" # ~ 2 min 45s
+      vertical_increasing_cpus: 1 # (integer)
+
   worker:
-    number: 2
+    number: 1
     labels:
       node: worker
     resources:
-      cpu: 4
+      cpu: 1
       memory: 4  # in gigabytes
     ports:
       name: ssh
@@ -48,11 +53,13 @@ app:
     folderPath: /home/omartinez/compss-matmul/matmul-extract
     file: gen.py
   params:
-    num_individuals: "380"
+    num_individuals: "100"
     size: "100"
     target: "200"
-    lifecycles: "35"
-    get-fitness: "True"
+    lifecycles: "10"
+    get-fitness: "False"
+    iterations: "15"
+    sleep_tasks: "4"
 
 monitoring:
   servicemonitor:
