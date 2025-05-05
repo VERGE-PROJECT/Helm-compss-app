@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "compss-matmul.name" -}}
+{{- define "compss-mqtt.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "compss-matmul.fullname" -}}
+{{- define "compss-mqtt.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }} 
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "compss-matmul.chart" -}}
+{{- define "compss-mqtt.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "compss-matmul.labels" -}}
-helm.sh/chart: {{ include "compss-matmul.chart" . }}
-{{ include "compss-matmul.selectorLabels" . }}
+{{- define "compss-mqtt.labels" -}}
+helm.sh/chart: {{ include "compss-mqtt.chart" . }}
+{{ include "compss-mqtt.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,7 +45,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "compss-matmul.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "compss-matmul.name" . }}
+{{- define "compss-mqtt.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "compss-mqtt.name" . }}
 {{- end }}
 

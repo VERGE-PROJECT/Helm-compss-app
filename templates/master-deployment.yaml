@@ -4,27 +4,25 @@ metadata:
   namespace: {{ .Release.Namespace }}
   name: {{ .Release.Name }}-master
   labels:
-    {{- include "compss-matmul.labels" . | nindent 4 }}
-    {{- toYaml .Values.compss.master.labels | nindent 4 }}
+    {{- include "compss-mqtt.labels" . | nindent 4 }}
+    app: compss 
+    wf_id: {{ $.Release.Name }}
+    role: master
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
-      pod-hostname: master
+      app: compss 
+      wf_id: {{ $.Release.Name }}
+      role: master
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
-        pod-hostname: master
+        app: compss 
+        wf_id: {{ $.Release.Name }}
+        role: master
     spec:
-      serviceAccountName: cleanup
-      terminationGracePeriodSeconds: 5
-      hostname: master
-      subdomain: {{ .Release.Name }}
-      dnsConfig:
-        searches:
-        - {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local
+      serviceAccountName: {{ .Release.Name }}-sa
       initContainers:
       - name: wait-for-workers
         image: busybox
@@ -34,25 +32,44 @@ spec:
           - |
             for i in $(seq 1 {{ $.Values.compss.worker.number }}); do
               worker_index=$((i - 1))
-              until nslookup {{ .Release.Name }}-worker-${worker_index}.{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local; do
+              until nslookup {{ .Release.Name }}-worker-${worker_index}.{{ .Release.Namespace }}.svc.cluster.local; do
                 echo "Waiting for {{ .Release.Name }}-worker-${worker_index}";
                 sleep 2;
               done;
             done
       containers:
-      - name: mqtt
-        image: "oriolmac/mqtt-broker"
+      {{- if eq .Values.compss.master.prometheusClient.enabled true }}
+      - name: redis-server
+        image: "redis:latest"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["redis-server"]
         ports:
-        - name: mqtt
-          containerPort: 1883
-          protocol: TCP
+        - containerPort: {{ .Values.compss.master.prometheusClient.redisContainerPort }}
+          name: redis
+      - name: prometheus-client
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: 
+          - "python3"
+          - "{{ .Values.app.context.folderPath }}/metrics_client_counter_final.py"
+          - "--redis_port"
+          - "{{ .Values.compss.master.prometheusClient.redisContainerPort }}"
+          - "--prometheus_port"
+          - "{{ .Values.compss.master.prometheusClient.containerPort }}"
+          #- "--buckets"
+          #- "{{ .Values.compss.master.prometheusClient.buckets }}"
+        ports:
+        - containerPort: {{ .Values.compss.master.prometheusClient.containerPort }}
+          name: prometheus
+      {{- end}}
       - name: master
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env: 
         - name: DEPLOYMENT_NAME
           value: {{ .Release.Name }}
+        - name: DEPLOYMENT_NAMESPACE
+          value: {{ .Release.Namespace }}
         command: [ "/opt/COMPSs/Runtime/scripts/system/kubernetes/master.sh" ]
         args: 
           - "{{ .Release.Namespace }}"
@@ -60,22 +77,34 @@ spec:
           - "{{ .Values.compss.worker.resources.cpu }}"
           - "{{ .Values.compss.worker.resources.memory }}"
           - "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          - "{{ .Values.matmulparams.context.folderPath }}"  # app_dir
+          - "{{ .Values.app.context.folderPath }}"  # app_dir
           - "0"   # min_vms
           - "0"   # max_vms
           - "0"   # creation_time
-          - "-d -t -g {{ .Values.matmulparams.context.folderPath }}/{{ .Values.matmulparams.context.file }} -b {{ .Values.matmulparams.b }} -e {{ .Values.matmulparams.e }}"
-
+          - "43100" # master port
+          {{- $schedparams := "" }}
+          {{- range $key, $value := .Values.compss.master.scheduler_config }}
+            {{- if ne $key "" }}  
+              {{- $schedparams = printf "%s%s=%v;" $schedparams $key $value }}
+            {{- end }}
+          {{- end }}
+          - "{{ $schedparams }}"
+          {{- $params := "" }}
+          {{- range $key, $value := .Values.app.params }}
+            {{- if and (ne $key "") }}  
+              {{- $params = printf "%s --%s %s" $params $key $value }}  
+            {{- end }}
+          {{- end }}
+          - "--scheduler_config_file={{ .Values.app.context.folderPath }}/sched.config --scheduler=es.bsc.compss.scheduler.lookahead.locality.LocalityTS -d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
         ports:
-        - name: {{ .Values.compss.master.ports.name }}
-          containerPort: 22
-          protocol: TCP
+        - name: 43100-port
+          containerPort: 43100 
       {{- if and .Values.compss.master.volume }}
         volumeMounts:
-          - name: master-results-pvc
+          - name: {{ .Release.Name }}-results
             mountPath: /root/.COMPSs/ # mount path within the container 
       volumes:
-      - name: master-results-pvc
+      - name: {{ .Release.Name }}-results
         persistentVolumeClaim:
-          claimName: master-results-pvc
+          claimName: {{ .Release.Name }}-results
       {{- end }}
