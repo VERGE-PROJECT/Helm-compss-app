@@ -101,10 +101,10 @@ spec:
           containerPort: 43100 
       {{- if and .Values.compss.master.volume }}
         volumeMounts:
-          - name: master-results-pvc
+          - name: {{ .Release.Name }}-results
             mountPath: /root/.COMPSs/ # mount path within the container 
       volumes:
-      - name: master-results-pvc
+      - name: {{ .Release.Name }}-results
         persistentVolumeClaim:
-          claimName: master-results-pvc
+          claimName: {{ .Release.Name }}-results
       {{- end }}

@@ -3,7 +3,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   namespace: {{ .Release.Namespace }}
-  name: master-results-pvc
+  name: {{ .Release.Name }}-results
 spec:
   accessModes:
     - ReadWriteOnce
