@@ -3,10 +3,19 @@
 # Declare variables to be passed into your templates.
 #oriolmac/compss-test:latest
 image:
-  repository: oriolmac/compss
+  repository: oriolmac/compss-mqtt
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: 3.3-deployment
+  tag: latest-arm
+
+mqtt:
+  enabled: true
+  image:
+    repository: oriolmac/mqtt-broker
+    tag: latest
+    pullPolicy: Always
+  port: 1883
+  nodePort: 31883
 
 compss:
   # namespace: {}
@@ -25,17 +34,17 @@ compss:
       containerPort: 15000
       redisContainerPort: 6379
 
-    scheduler_config:
-      vertical_scalability: "true"
-      vertical_scaling_up_taskThreshold: "115" # ~ 2 min 45s
-      vertical_increasing_cpus: 1 # (integer)
+    #scheduler_config:
+    #  vertical_scalability: "true"
+    #  vertical_scaling_up_taskThreshold: "115" # ~ 2 min 45s
+    #  vertical_increasing_cpus: 1 # (integer)
 
   worker:
     number: 1
     labels:
       node: worker
     resources:
-      cpu: 1
+      cpu: 2
       memory: 4  # in gigabytes
     ports:
       name: ssh
@@ -50,16 +59,20 @@ compss:
 
 app:
   context:
-    folderPath: /home/omartinez/compss-matmul/matmul-extract
-    file: gen.py
+    folderPath: /home/omartinez/compss-matmul/verge
+    file: reverse-mqtt.py
   params:
-    num_individuals: "100"
-    size: "100"
-    target: "200"
-    lifecycles: "10"
-    get-fitness: "False"
-    iterations: "15"
-    sleep_tasks: "4"
+    #num_individuals: "100"
+    #size: "100"
+    #target: "200"
+    #lifecycles: "10"
+    #get-fitness: "False"
+    #iterations: "15"
+    #sleep_tasks: "4"
+
+    num_blocks: "6"
+    elems_per_block: "512"
+    #number_iterations: "15"
 
 monitoring:
   servicemonitor:
