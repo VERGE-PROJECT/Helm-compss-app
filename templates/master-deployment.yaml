@@ -22,6 +22,9 @@ spec:
         wf_id: {{ $.Release.Name }}
         role: master
     spec:
+      runtimeClassName: nvidia  # nvidia Runtime container
+      imagePullSecrets:
+      - name: regcred
       serviceAccountName: {{ .Release.Name }}-sa
       initContainers:
       - name: wait-for-workers
@@ -99,12 +102,21 @@ spec:
         ports:
         - name: 43100-port
           containerPort: 43100 
-      {{- if and .Values.compss.master.volume }}
         volumeMounts:
+          - name: b2drop
+            mountPath: /root/smart-city-compss/data
+      {{- if and .Values.compss.master.volume }}
           - name: {{ .Release.Name }}-results
             mountPath: /root/.COMPSs/ # mount path within the container 
+      {{- end }}
       volumes:
+      {{- if .Values.compss.master.volume }}
       - name: {{ .Release.Name }}-results
         persistentVolumeClaim:
           claimName: {{ .Release.Name }}-results
       {{- end }}
+      - name: b2drop
+        hostPath:
+          path: /mnt/b2drop/smartCity
+          type: Directory
+      

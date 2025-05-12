@@ -24,6 +24,8 @@ spec:
         wf_id: {{ $.Release.Name }}
         role: worker-{{ $i }}
     spec:
+      imagePullSecrets:
+        - name: regcred
       containers:
       - name: worker
         image: {{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}
@@ -32,7 +34,7 @@ spec:
         resources:
           limits:
             memory: {{ $.Values.compss.worker.resources.memory }}G
-            cpu: {{ add $.Values.compss.worker.resources.cpu (default 0 $.Values.compss.master.scheduler_config.vertical_increasing_cpus) }}
+            cpu: {{ $.Values.compss.worker.resources.cpu }}{{- if and (typeIs "map" $.Values.compss.master.scheduler_config) (hasKey $.Values.compss.master.scheduler_config "vertical_increasing_cpus") }} + {{ $.Values.compss.master.scheduler_config.vertical_increasing_cpus }}{{- end }}
         ports:
         - containerPort: 22
           name: 22-port
