@@ -9,6 +9,10 @@ spec:
     wf_id: {{ $.Release.Name }}
     role: master
   ports:
+  - name: port-5001
+    protocol: UDP
+    port: 5001
+    targetPort: 5001-port
   - name: port-43100
     protocol: TCP
     port: 43100
