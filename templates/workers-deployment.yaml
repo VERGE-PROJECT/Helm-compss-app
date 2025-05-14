@@ -6,7 +6,7 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   name: {{ $.Release.Name }}-worker-{{ $i }}
   labels:
-    {{- include "compss-app.labels" $ | nindent 4 }}
+    {{- include "compss-smartcity.labels" $ | nindent 4 }}
     app: compss
     wf_id: {{ $.Release.Name }}
     role: worker-{{ $i }}

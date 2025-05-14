@@ -4,7 +4,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   name: {{ .Release.Name }}-master
   labels:
-    {{- include "compss-app.labels" . | nindent 4 }}
+    {{- include "compss-smartcity.labels" . | nindent 4 }}
     app: compss 
     wf_id: {{ $.Release.Name }}
     role: master
@@ -43,6 +43,15 @@ spec:
               done;
             done
       containers:
+      {{- if .Values.mqtt.enabled }}
+      - name: mqtt
+        image: "{{ .Values.mqtt.image.repository }}:{{ .Values.mqtt.image.tag }}"
+        imagePullPolicy: {{ .Values.mqtt.image.pullPolicy }}
+        ports:
+        - name: mqtt
+          containerPort: {{ .Values.mqtt.port }}
+          protocol: TCP
+      {{- end }}
       {{- if eq .Values.compss.master.prometheusClient.enabled true }}
       - name: redis-server
         image: "redis:latest"
