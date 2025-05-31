@@ -24,6 +24,10 @@ spec:
         wf_id: {{ $.Release.Name }}
         role: worker-{{ $i }}
     spec:
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          effect: "NoSchedule"
+          operator: "Exists"
       imagePullSecrets:
         - name: regcred
       containers:
@@ -44,6 +48,9 @@ spec:
           name: 43002-port
         - containerPort: 49049
           name: 49049-port
+        volumeMounts:
+        - name: aplicacion
+          mountPath: /root/smart-city-compss
       {{- if eq $.Values.compss.worker.prometheusClient.enabled true }}
       - name: redis-server
         image: "redis:latest"
@@ -64,5 +71,10 @@ spec:
         - containerPort: {{ $.Values.compss.worker.prometheusClient.containerPort }} 
           name: prometheus
       {{- end}}
+      volumes:
+      - name: aplicacion
+        hostPath:
+          path: /home/omartinez/smart-city-compss
+          type: Directory
 ---
 {{- end }}
